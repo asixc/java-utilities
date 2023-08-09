@@ -1,11 +1,8 @@
 package dev.jotxee.images.checkformats;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,21 +23,27 @@ public interface DiscardImagesByFormat {
     }
 
     private static boolean isValidImage(final String imageUrl) {
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            final HttpGet httpGet = new HttpGet(imageUrl);
-            final HttpResponse response = httpClient.execute(httpGet);
-            final HttpEntity entity = response.getEntity();
+        final OkHttpClient httpClient = new OkHttpClient();
 
-            if (entity != null) {
-                final byte[] imageBytes = EntityUtils.toByteArray(entity);
+           final Request request = new Request.Builder()
+                    .url(imageUrl)
+                    .build();
+
+        try (final Response response = httpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                assert response.body() != null;
+                final byte[] imageBytes = response.body().bytes();
                 final String format = getImageFormat(imageBytes);
                 if (UNKNOWN_FORMAT.equals(format)) {
                     logger.log(Level.INFO, () -> format("Formato de imagen desconocido: %s", imageUrl));
                 }
                 return format.equals("JPEG") || format.equals("WebP") || format.equals("PNG");
             }
+
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            httpClient.dispatcher().executorService().shutdown();
         }
 
         return false;

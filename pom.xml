@@ -35,9 +35,9 @@
         * Added for hppt calls
         -->
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version> <!-- La versión puede variar, verifica la última versión disponible -->
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.1</version>
         </dependency>
     </dependencies>
 </project>
