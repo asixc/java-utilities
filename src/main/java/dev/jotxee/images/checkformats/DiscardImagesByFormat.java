@@ -7,6 +7,7 @@ import okhttp3.Response;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,7 +18,12 @@ public interface DiscardImagesByFormat {
     String UNKNOWN_FORMAT = "Desconocido";
 
     static List<String> getValidImageUrls(final List<String> imageUrls) {
-        return imageUrls.stream()
+        // Para saber el número de hilos que se están ejecutando
+        int defaultParallelism = ForkJoinPool.commonPool().getParallelism();
+        // int parallelism = Integer.parseInt(System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism"));
+        System.out.println("Número predeterminado de hilos: " + defaultParallelism);
+
+        return imageUrls.parallelStream()
                 .filter(DiscardImagesByFormat::isValidImage)
                 .toList();
     }
@@ -41,6 +47,7 @@ public interface DiscardImagesByFormat {
             }
 
         } catch (IOException e) {
+            logger.log(Level.INFO, () -> format("E: %s", imageUrl));
             e.printStackTrace();
         } finally {
             httpClient.dispatcher().executorService().shutdown();
